@@ -1,7 +1,7 @@
 # MMDG
 
 This repository contains implementation for multi-modal domain generalization (MMDG) method entitled "Multi-modal cross-domain mixed fusion model with dual disentanglement for fault diagnosis under unseen working conditions" 
-*(Jan 1, 2026) Preprint version: [ArXiv](https://doi.org/10.48550/arXiv.2512.24679). 
+* **(Jan 1, 2026)** Preprint version: [ArXiv](https://doi.org/10.48550/arXiv.2512.24679). 
 
 The complete source code with detailed network configuration will be released shortly after the manuscript review process.
 
@@ -52,4 +52,5 @@ Please cite our work if you find it useful — we truly appreciate it!
       year={2025},
       doi={10.48550/arXiv.2512.24679}
 }
+
 ```
