@@ -22,8 +22,8 @@ def parse_args():
     parser.add_argument('--num_samples', type=int, default=500, help='sample number of each category')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='validation set ratio')
 
-    parser.add_argument('--source_condition', type=list, default=[0,2,6], help='source domain data working conditions')
-    parser.add_argument('--target_condition', type=list, default=[8], help='target domain data working conditions')
+    parser.add_argument('--source_condition', type=int, nargs='+', default=[1, 2, 3], help='source domain data working conditions')
+    parser.add_argument('--target_condition', type=int, nargs='+', default=[0], help='target domain data working conditions')
     
     parser.add_argument('-root', '--dataset_root', type=str, help='path to dataset', default='.' + os.sep + 'dataset')
     parser.add_argument('-exp', '--experiment_root', type=str, help='root where to store models, losses and accuracies', default='.' + os.sep + 'output')
@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument('-seed', '--manual_seed',
                         type=int,
                         help='input for the manual seeds initializations',
-                        default=42)
+                        default=2024)
 
     return parser.parse_args()
     
@@ -54,17 +54,17 @@ def main(opt):
     '''
     Initialize everything and train
     '''
-    if not os.path.exists(options.experiment_root):
-        os.makedirs(options.experiment_root)
+    if not os.path.exists(opt.experiment_root):
+        os.makedirs(opt.experiment_root)
 
-    if torch.cuda.is_available() and not options.cuda:
+    if torch.cuda.is_available() and not opt.cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
     
     dst_src = init_dataset(opt, 'src', opt.data_dir, opt.num_samples, opt.val_ratio)
     dst_tar = init_dataset(opt, 'tar', opt.data_dir, opt.num_samples, opt.val_ratio)
 
-    device = 'cuda:0' if torch.cuda.is_available() and options.cuda else 'cpu'
-    model = getattr(models, options.model_name)()
+    device = 'cuda:0' if torch.cuda.is_available() and opt.cuda else 'cpu'
+    model = getattr(models, opt.model_name)()
     model = model.to(device)
     # print(model)
     
@@ -74,13 +74,13 @@ def main(opt):
         output_dim=model.dim  # Output feature dimension
     ).to(device)
     print('Using ', device)
-    param_list = [{"params": model.parameters(), "lr": options.learning_rate},
-                  {"params": fused_classifier.parameters(), "lr": options.learning_rate},
-                  {"params": domain_extractor.parameters(), "lr": options.learning_rate}]
-    optim = torch.optim.Adam(params=param_list, lr=options.learning_rate)
+    param_list = [{"params": model.parameters(), "lr": opt.learning_rate},
+                  {"params": fused_classifier.parameters(), "lr": opt.learning_rate},
+                  {"params": domain_extractor.parameters(), "lr": opt.learning_rate}]
+    optim = torch.optim.Adam(params=param_list, lr=opt.learning_rate)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optim,
-                                           gamma=options.lr_scheduler_gamma,
-                                           step_size=options.lr_scheduler_step)
+                                           gamma=opt.lr_scheduler_gamma,
+                                           step_size=opt.lr_scheduler_step)
     train_mix(opt=opt,
             src_dataset=dst_src,
             model=model,
@@ -100,19 +100,5 @@ def main(opt):
 
 if __name__ == '__main__':
     options = parse_args()
-
-    tasks = [0, 1, 2, 3]
-    test_task = 0
-    options.target_condition = [test_task]
-    options.source_condition = [x for x in tasks if x!=test_task]
-
-    test_mat_ls = []
-    test_acc_ls = []
-
-    options.manual_seed = 2024
     init_seed(options)
-    
-    res = main(options)
-    test_acc, test_matrix = res
-    test_mat_ls.append(test_matrix)
-    test_acc_ls.append(test_acc)
+    test_acc, test_matrix = main(options)

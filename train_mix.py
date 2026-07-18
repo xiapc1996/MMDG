@@ -237,6 +237,8 @@ def train_mix(opt, src_dataset, model, classifier, domain_extractor, optim, lr_s
             batch_preds = []
             batch_labels = []
             cls_loss = 0.0
+            mmd_total = 0.0
+            modality_orth_total = 0.0
             
             # Get one batch from each domain
             for domain_idx, it in enumerate(iterators):
@@ -341,7 +343,7 @@ def train_mix(opt, src_dataset, model, classifier, domain_extractor, optim, lr_s
                 mmd_loss_vib_cur = mmd_loss(vib_inv, cur_inv)
                 mmd_loss_vib_aud = mmd_loss(vib_inv, aud_inv)
                 mmd_loss_cur_aud = mmd_loss(cur_inv, aud_inv)
-                mmd_total = mmd_loss_vib_cur + mmd_loss_vib_aud + mmd_loss_cur_aud
+                mmd_total += mmd_loss_vib_cur + mmd_loss_vib_aud + mmd_loss_cur_aud
                 
                 # modality-level orthogonality constraint
                 orth_loss_vib = covariance_loss(vib_inv, vib_spec)
@@ -352,8 +354,8 @@ def train_mix(opt, src_dataset, model, classifier, domain_extractor, optim, lr_s
                 orth_loss_vib_cur = covariance_loss(vib_spec, cur_spec)
                 orth_loss_vib_aud = covariance_loss(vib_spec, aud_spec)
                 orth_loss_cur_aud = covariance_loss(cur_spec, aud_spec)
-                modality_orth_total = orth_loss_vib + orth_loss_cur + orth_loss_aud + \
-                                     orth_loss_vib_cur + orth_loss_vib_aud + orth_loss_cur_aud
+                modality_orth_total += orth_loss_vib + orth_loss_cur + orth_loss_aud + \
+                                      orth_loss_vib_cur + orth_loss_vib_aud + orth_loss_cur_aud
                 
                 # feature fusion
                 domain_feat = domain_extractor(feas_vib, feas_cur, feas_aud)
